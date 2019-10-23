@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:resultk/resultk.dart';
 import 'package:test/test.dart';
 
@@ -11,6 +13,11 @@ void main() {
     result.onFailure((e) {
       fail("never be invoked");
     });
+
+    expect(result.getOrNull(), equals(value));
+
+    expect(result.toString(), 'success($value)');
+
     final a = result.fold(onSuccess: (v) => v, onFailure: (e) => null);
     expect(a, equals(value));
 
@@ -30,6 +37,25 @@ void main() {
     } catch (e) {
       fail("never be invoked");
     }
+  });
+
+  group('Assertion Tests : ', () {
+    final value = "Hello";
+    final Result<String> result = Result.success(value);
+    test("should throw assertion error on passing onSuccess as null", () {
+      try {
+        result.fold(onSuccess: null, onFailure: (e) => null);
+      } catch (e) {
+        expect(e, isInstanceOf<AssertionError>());
+      }
+    });
+    test("should throw assertion error on passing onFailure as null", () {
+      try {
+        result.fold(onSuccess: (v) => v, onFailure: (e) => null);
+      } catch (e) {
+        expect(e, isInstanceOf<AssertionError>());
+      }
+    });
   });
 
   test("mapping", () {
@@ -69,6 +95,10 @@ void main() {
     expect(result.getOrNull(), isNull);
 
     expect(result.getOrDefault("Hello."), equals("Hello."));
+
+    final a = result.fold(onSuccess: (v) => null, onFailure: (e) => e);
+    expect(a, result.exceptionOrNull());
+
     expect(result.getOrElse((e) {
       expect(e.exception, equals(error));
       return "World.";
@@ -80,7 +110,6 @@ void main() {
     } catch (e) {
       // ignore
     }
-
     result.onSuccess((v) {
       fail("never be invoked");
     });
